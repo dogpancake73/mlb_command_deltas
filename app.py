@@ -1,18 +1,29 @@
-# command_delta_dashboard_all_seasons.py
-
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="MLB Command Delta Dashboard", layout="wide")
 
-# --- Load processed data ---
-df = pd.read_csv("command_deltas_processed.csv")
+# -----------------------------
+# Load data
+# -----------------------------
 
-# --- Sidebar navigation ---
-page = st.sidebar.selectbox("Select Page", ["Leaderboard", "Pitcher View"])
+@st.cache_data
+def load_data():
+    return pd.read_csv("command_deltas_processed.csv")
 
-# --- Common filter ---
+df = load_data()
+
+# -----------------------------
+# Sidebar controls
+# -----------------------------
+
+page = st.sidebar.selectbox(
+    "Select Page",
+    ["Leaderboard", "Pitcher View"]
+)
+
 min_pitches = st.sidebar.slider(
     "Minimum Pitch Count",
     min_value=0,
@@ -21,75 +32,117 @@ min_pitches = st.sidebar.slider(
     step=10
 )
 
-# --- Leaderboard page ---
+# -----------------------------
+# Leaderboard page
+# -----------------------------
+
 if page == "Leaderboard":
+
     st.title("MLB Command Delta Leaderboard")
 
-    # Season filter
     season = st.selectbox(
-        "Select Season",
+        "Season",
         sorted(df["season"].unique())
     )
 
-    # Pitch type filter
     pitch = st.selectbox(
-        "Select Pitch Type",
-        sorted(df["pitch_type"].unique())
+        "Pitch Family",
+        sorted(df["pitch_group"].unique())
     )
 
     filtered = df[
         (df["season"] == season) &
-        (df["pitch_type"] == pitch) &
+        (df["pitch_group"] == pitch) &
         (df["pitch_count"] >= min_pitches)
     ]
 
-    filtered = filtered.sort_values("command_delta", ascending=False)
+    filtered = filtered.sort_values(
+        "command_grade",
+        ascending=False
+    )
 
-    st.subheader(f"Top Command Grades for {pitch} ({season})")
     st.dataframe(
-        filtered[["player_name", "pitch_count", "command_delta", "command_grade", "z_score"]]
-        .reset_index(drop=True)
+        filtered[
+            [
+                "player_name",
+                "pitch_count",
+                "command_delta",
+                "z_score",
+                "command_grade"
+            ]
+        ].reset_index(drop=True)
     )
 
-    # Optional CSV download
-    csv = filtered.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Download CSV for this Pitch Type & Season",
-        data=csv,
-        file_name=f"command_delta_{pitch}_{season}.csv",
-        mime="text/csv"
-    )
+# -----------------------------
+# Pitcher view page
+# -----------------------------
 
-# --- Pitcher view page ---
 elif page == "Pitcher View":
-    st.title("MLB Command Delta - Pitcher View (All Seasons)")
 
-    # Dropdown of all pitchers who meet min_pitches in at least one season
-    available_pitchers = df[df["pitch_count"] >= min_pitches]["player_name"].unique()
-    available_pitchers = np.sort(available_pitchers)
+    st.title("Pitcher Command Profiles")
 
-    pitcher_name = st.selectbox("Select Pitcher", available_pitchers)
+    pitchers = df[df["pitch_count"] >= min_pitches]["player_name"].unique()
 
-    # Filter for selected pitcher across all seasons
+    pitcher = st.selectbox(
+        "Pitcher",
+        np.sort(pitchers)
+    )
+
     pitcher_df = df[
-        (df["player_name"] == pitcher_name) &
+        (df["player_name"] == pitcher) &
         (df["pitch_count"] >= min_pitches)
-    ].sort_values(["season", "pitch_type"])
+    ].sort_values(["season", "pitch_group"])
 
-    if pitcher_df.empty:
-        st.warning(f"No data found for {pitcher_name} with at least {min_pitches} pitches.")
-    else:
-        st.subheader(f"{pitcher_name} Command Grades Across Seasons")
-        st.dataframe(
-            pitcher_df[["season", "pitch_type", "pitch_count", "command_delta", "command_grade", "z_score"]]
-            .reset_index(drop=True)
+    st.dataframe(
+        pitcher_df[
+            [
+                "season",
+                "pitch_group",
+                "pitch_count",
+                "command_delta",
+                "z_score",
+                "command_grade"
+            ]
+        ].reset_index(drop=True)
+    )
+
+    st.subheader("Command Grade by Pitch Family")
+
+    fig, ax = plt.subplots()
+
+    # Plot each pitch family
+    for pitch in pitcher_df["pitch_group"].unique():
+
+        subset = pitcher_df[pitcher_df["pitch_group"] == pitch]
+
+        ax.plot(
+            subset["season"],
+            subset["command_grade"],
+            marker="o",
+            label=pitch
         )
 
-        # Optional CSV download
-        csv = pitcher_df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="Download CSV for this Pitcher",
-            data=csv,
-            file_name=f"command_delta_{pitcher_name.replace(' ','_')}_all_seasons.csv",
-            mime="text/csv"
+    # Force full year labels
+    seasons = sorted(pitcher_df["season"].unique())
+    ax.set_xticks(seasons)
+    ax.set_xticklabels(seasons)
+
+    # Axis labels
+    ax.set_xlabel("Season")
+    ax.set_ylabel("Command Grade (20–80)")
+
+    # Grade range
+    ax.set_ylim(20, 80)
+
+    # Horizontal reference lines
+    for grade in [20, 30, 40, 50, 60, 70, 80]:
+        ax.axhline(
+            y=grade,
+            linestyle="--",
+            linewidth=0.8,
+            alpha=0.4
         )
+
+    ax.legend()
+
+    st.pyplot(fig)
