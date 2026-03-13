@@ -18,7 +18,7 @@ pitches = pd.read_csv("pitch_locations.csv.gz")
 # Sidebar
 # -----------------------------
 
-page = st.sidebar.selectbox("Select Page", ["Leaderboard","Pitcher View"])
+page = st.sidebar.selectbox("Select Page", ["Leaderboard","Pitcher View","Command Delta Primer"])
 
 min_pitches = st.sidebar.slider(
     "Minimum Pitch Count",
@@ -252,3 +252,114 @@ elif page == "Pitcher View":
         )
 
         st.pyplot(fig)
+# -----------------------------
+# Command Delta Primer Page
+# -----------------------------
+
+elif page == "Command Delta Primer":
+
+    st.title("Command Delta: A Primer")
+
+    st.markdown("""
+### What is Command Delta?
+
+Command Delta is a metric designed to measure **pitch command** using pitch location dispersion.
+
+Rather than evaluating whether a pitch is in the strike zone or not, the metric measures **how tightly clustered a pitcher's locations are** for a given pitch type.
+
+In other words:
+
+**How consistently can a pitcher locate a pitch?**
+
+---
+
+### How It Works
+
+For each pitcher and pitch type, we measure the spread of pitch locations using the standard deviation of:
+
+* Horizontal location (`plate_x`)
+* Vertical location (`plate_z`)
+
+We combine those into a single dispersion metric:
+
+Command Delta = √(σx² + σz²)
+
+Lower values indicate **tighter pitch clusters and better command**.
+
+---
+
+### Converting to Scouting Grades
+
+To make the metric easier to interpret, Command Delta is converted into a **20–80 scouting scale**.
+
+This is done by calculating a z-score within each pitch family and mapping it to:
+
+* **80** – Elite command  
+* **70** – Plus-plus command  
+* **60** – Plus command  
+* **50** – MLB average  
+* **40** – Below average  
+* **30** – Poor command  
+* **20** – Very poor command  
+
+---
+
+### Why Pitch Families Are Used
+
+Different pitch types naturally have different movement and command profiles.
+
+To account for this, Command Delta compares pitchers **within pitch families**:
+
+* Four-Seam Fastballs  
+* Sinkers  
+* Cutters  
+* Sliders  
+* Sweepers  
+* Curveballs  
+* Offspeed pitches  
+
+This ensures that pitchers are evaluated against **comparable pitch types**.
+
+---
+
+### Interpreting the Heatmaps
+
+The command heatmaps show where a pitcher actually located a given pitch.
+
+The visualizations include:
+
+* **Kernel density heatmap** – shows where pitches are most frequently located
+* **1 standard deviation ellipse** – represents the pitcher's command footprint
+
+A **smaller ellipse** indicates tighter command.
+
+---
+
+### Data Source
+
+All pitch data comes from Statcast via the Python library:
+
+`pybaseball`
+
+The analysis currently includes the **2023–2025 MLB seasons**.
+
+---
+
+### Why This Metric Matters
+
+Command is one of the most important — and hardest to measure — pitching skills.
+
+Traditional statistics often capture **results**, not **process**.
+
+Command Delta focuses specifically on the **consistency of pitch location**, providing a clearer look at a pitcher's ability to execute.
+
+---
+
+### Explore the Dashboard
+
+Use the pages in the sidebar to:
+
+* View command leaderboards
+* Explore pitcher arsenals
+* Analyze pitch command heatmaps
+""")
