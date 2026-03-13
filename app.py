@@ -263,13 +263,13 @@ elif page == "Command Delta Primer":
     st.markdown("""
 ### What is Command Delta?
 
-Command Delta is a metric designed to measure **pitch command** using pitch location dispersion.
+Command Delta is a metric designed to measure pitch location consistency using pitch location dispersion.
 
-Rather than evaluating whether a pitch is in the strike zone or not, the metric measures **how tightly clustered a pitcher's locations are** for a given pitch type.
+Rather than evaluating whether a pitch is in the strike zone or not, the metric measures how tightly clustered a pitcher's locations are for a given pitch type.
 
 In other words:
 
-**How consistently can a pitcher locate a pitch?**
+How consistently can a pitcher locate a pitch?
 
 ---
 
@@ -284,13 +284,13 @@ We combine those into a single dispersion metric:
 
 Command Delta = √(σx² + σz²)
 
-Lower values indicate **tighter pitch clusters and better command**.
+Lower values indicate tighter pitch clusters and better command.
 
 ---
 
 ### Converting to Scouting Grades
 
-To make the metric easier to interpret, Command Delta is converted into a **20–80 scouting scale**.
+To make the metric easier to interpret, Command Delta is converted into a 20–80 scouting scale.
 
 This is done by calculating a z-score within each pitch family and mapping it to:
 
@@ -308,7 +308,7 @@ This is done by calculating a z-score within each pitch family and mapping it to
 
 Different pitch types naturally have different movement and command profiles.
 
-To account for this, Command Delta compares pitchers **within pitch families**:
+To account for this, Command Delta compares pitchers within pitch families:
 
 * Four-Seam Fastballs  
 * Sinkers  
@@ -318,7 +318,7 @@ To account for this, Command Delta compares pitchers **within pitch families**:
 * Curveballs  
 * Offspeed pitches  
 
-This ensures that pitchers are evaluated against **comparable pitch types**.
+This ensures that pitchers are evaluated against comparable pitch types and their shapes.
 
 ---
 
@@ -328,10 +328,10 @@ The command heatmaps show where a pitcher actually located a given pitch.
 
 The visualizations include:
 
-* **Kernel density heatmap** – shows where pitches are most frequently located
-* **1 standard deviation ellipse** – represents the pitcher's command footprint
+* Kernel density heatmap – shows where pitches are most frequently located
+* 1 standard deviation ellipse – represents the pitcher's command footprint
 
-A **smaller ellipse** indicates tighter command.
+A smaller ellipse indicates tighter location consistency.
 
 ---
 
@@ -341,17 +341,21 @@ All pitch data comes from Statcast via the Python library:
 
 `pybaseball`
 
-The analysis currently includes the **2023–2025 MLB seasons**.
+The analysis currently includes the 2023–2025 MLB seasons.
 
 ---
 
 ### Why This Metric Matters
 
-Command is one of the most important — and hardest to measure — pitching skills.
+Command is one of the most important and difficult pitching skills to measure.
 
-Traditional statistics often capture **results**, not **process**.
+Traditional statistics often capture results, not process.
 
-Command Delta focuses specifically on the **consistency of pitch location**, providing a clearer look at a pitcher's ability to execute.
+Command Delta focuses specifically on the consistency of pitch location, providing a clearer look at a pitcher's ability to execute.
+
+Command Deltas should not be used in isolation to evaluate command, but rather in conjunction with things like strike and zone rates as well as heat maps.               
+
+A potential limitation of this metric is that it may assign a lower command grade to a pitch if there are multiple intended locations, so be mindful of that when using referring to Command Deltas.                
 
 ---
 
